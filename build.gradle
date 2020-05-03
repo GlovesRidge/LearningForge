@@ -1,9 +1,11 @@
+// Forge buildscript
 buildscript {
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
         jcenter()
         mavenCentral()
     }
+    // Buildscript dependency on Forge Gradle
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
     }
@@ -14,10 +16,14 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 version = '1.15.2-0.1.0'
-group = 'io.github.glovesridge.caveupdate'
-archivesBaseName = 'caveupdate'
+group = 'io.github.glovesridge.learningforge'
+archivesBaseName = 'learningforge'
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
+
+repositories {
+	// Put remote maven repositories here
+}
 
 minecraft {
     // The mappings can be changed at any time, and must be in the following format.
@@ -26,6 +32,7 @@ minecraft {
     // Use non-default mappings at your own risk. they may not always work.
     // Simply re-run your setup task after changing the mappings to update your workspace.
     mappings channel: 'stable', version: '60-1.15'
+
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
     
     // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -44,7 +51,10 @@ minecraft {
 
             mods {
                 examplemod {
+                	// Main sources (everything that goes in your final compiled mod. From /src/main/)
                     source sourceSets.main
+                    // Test sources (debugging, unit tests. From /src/test/)
+					// source sourceSets.test
                 }
             }
         }
@@ -60,7 +70,10 @@ minecraft {
 
             mods {
                 examplemod {
+                	// Main sources (everything that goes in your final compiled mod. From /src/main/)
                     source sourceSets.main
+                    // Test sources (debugging, unit tests. From /src/test/)
+					// source sourceSets.test
                 }
             }
         }
@@ -78,7 +91,10 @@ minecraft {
 
             mods {
                 examplemod {
+                	// Main sources (everything that goes in your final compiled mod. From /src/main/)
                     source sourceSets.main
+                    // Test sources (debugging, unit tests. From /src/test/)
+					// source sourceSets.test
                 }
             }
         }
@@ -115,13 +131,14 @@ dependencies {
 jar {
     manifest {
         attributes([
-            "Specification-Title": "examplemod",
-            "Specification-Vendor": "examplemodsareus",
-            "Specification-Version": "1", // We are version 1 of ourselves
+            "Specification-Title": "learningforge",
+            "Specification-Vendor": "io.github.glovesridge.learningforge",
+            "Specification-Version": "1.0", // We are version 1 of ourselves
             "Implementation-Title": project.name,
             "Implementation-Version": "${version}",
-            "Implementation-Vendor" :"examplemodsareus",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+            "Implementation-Vendor" : "io.github.glovesridge.learningforge",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+            "Signing-Fingerprint": project.hasProperty('signSHA1') ? project.findProperty('signSHA1') : "unsigned"
         ])
     }
 }
@@ -148,6 +165,25 @@ publishing {
     }
 }
 
+// This code makes sure that variables are correctly inserted into mods.toml when the mod is built or run.
+processResources {
+    // This will ensure that this task is redone when the versions change.
+    inputs.property 'version', project.version
+
+    // Replace stuff in mods.toml, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'META-INF/mods.toml'
+
+        // Replace version
+        expand 'version': project.version
+    }
+
+    // Copy everything else except the mods.toml
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'META-INF/mods.toml'
+    }
+}	
+
 // Generates a sources jar when you build your mod. A sources jar is a non-executable jar that contains the source
 // code for your mod. This is useful for you if you ever loose your code and also vital to any developers who want
 // to write mods that interact with your mod.
@@ -159,23 +195,4 @@ build.dependsOn sourcesJar
 
 artifacts {
     archives sourcesJar
-}
-
-// This code makes sure that variables are correctly inserted into mods.toml when the mod is built or run.
-processResources {
-    // This will ensure that this task is redone when the versions change.
-    inputs.property 'version', project.version
-
-    // Replace stuff in mods.toml, nothing else
-    from(sourceSets.main.resources.srcDirs) {
-        include 'META-INF/mods.toml'
-
-        // Replace version
-        expand 'version':project.version
-    }
-
-    // Copy everything else except the mods.toml
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'META-INF/mods.toml'
-    }
 }
